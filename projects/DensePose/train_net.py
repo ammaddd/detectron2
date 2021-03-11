@@ -9,6 +9,9 @@ This script is similar to the training script in detectron2/tools.
 It is an example of how a user might use detectron2 for a new project.
 """
 
+from comet_ml import Experiment
+experiment = Experiment()
+
 import detectron2.utils.comm as comm
 from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, hooks, launch
@@ -51,7 +54,8 @@ def main(args):
             verify_results(cfg, res)
         return res
 
-    trainer = Trainer(cfg)
+    experiment.log_asset_data(cfg, name="config")
+    trainer = Trainer(cfg, experiment)
     trainer.resume_or_load(resume=args.resume)
     if cfg.TEST.AUG.ENABLED:
         trainer.register_hooks(

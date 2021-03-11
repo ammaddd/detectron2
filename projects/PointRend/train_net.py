@@ -7,6 +7,8 @@ PointRend Training Script.
 This script is a simplified version of the training script in detectron2/tools.
 """
 
+from comet_ml import Experiment
+experiment = Experiment()
 import os
 import torch
 
@@ -134,7 +136,8 @@ def main(args):
             verify_results(cfg, res)
         return res
 
-    trainer = Trainer(cfg)
+    experiment.log_asset_data(cfg, name="config")
+    trainer = Trainer(cfg, experiment)
     trainer.resume_or_load(resume=args.resume)
     return trainer.train()
 

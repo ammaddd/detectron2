@@ -295,7 +295,7 @@ class DefaultTrainer(TrainerBase):
         cfg (CfgNode):
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, experiment):
         """
         Args:
             cfg (CfgNode):
@@ -317,7 +317,7 @@ class DefaultTrainer(TrainerBase):
                 model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
             )
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
-            model, data_loader, optimizer
+            model, data_loader, optimizer, experiment
         )
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)
