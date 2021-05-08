@@ -168,7 +168,7 @@ class TrainerBase:
         for h in self._hooks:
             h.after_step()
 
-    def run_step(self):
+    def run_step(self, comet_logger):
         raise NotImplementedError
 
 
@@ -191,7 +191,7 @@ class SimpleTrainer(TrainerBase):
     or write your own training loop.
     """
 
-    def __init__(self, model, data_loader, optimizer):
+    def __init__(self, model, data_loader, optimizer, comet_logger):
         """
         Args:
             model: a torch Module. Takes a data from data_loader and returns a
@@ -213,6 +213,7 @@ class SimpleTrainer(TrainerBase):
         self.data_loader = data_loader
         self._data_loader_iter = iter(data_loader)
         self.optimizer = optimizer
+        self.comet_logger = comet_logger
 
     def run_step(self):
         """
@@ -238,8 +239,14 @@ class SimpleTrainer(TrainerBase):
         """
         self.optimizer.zero_grad()
         losses.backward()
-
         self._write_metrics(loss_dict, data_time)
+        self.comet_logger.log_metrics(loss_dict)
+        img = data[0]['image']
+        self.comet_logger.log_image(img, name="image",
+                                    image_channels="first")
+        if 'sem_seg' in data[0].keys():
+            seg = data[0]['sem_seg']
+            self.comet_logger.log_image(seg, name="segmentation")
 
         """
         If you need gradient clipping/scaling or other processing, you can
@@ -336,6 +343,13 @@ class AMPTrainer(SimpleTrainer):
         self.grad_scaler.scale(losses).backward()
 
         self._write_metrics(loss_dict, data_time)
+        self.comet_logger.log_metrics(loss_dict)
+        img = data[0]['image']
+        self.comet_logger.log_image(img, name="image",
+                                    image_channels="first")
+        if 'sem_seg' in data[0].keys():
+            seg = data[0]['sem_seg']
+            self.comet_logger.log_image(seg, name="segmentation")
 
         self.grad_scaler.step(self.optimizer)
         self.grad_scaler.update()

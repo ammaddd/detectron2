@@ -9,6 +9,8 @@ This script is similar to the training script in detectron2/tools.
 It is an example of how a user might use detectron2 for a new project.
 """
 
+from detectron2.utils.comet_utils import CometLogger
+
 import detectron2.utils.comm as comm
 from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, hooks, launch
@@ -35,6 +37,8 @@ def setup(args):
 
 def main(args):
     cfg = setup(args)
+    comet_logger = CometLogger(args.comet)
+
     # disable strict kwargs checking: allow one to specify path handle
     # hints through kwargs, like timeout in DP evaluation
     PathManager.set_strict_kwargs_checking(False)
@@ -51,7 +55,8 @@ def main(args):
             verify_results(cfg, res)
         return res
 
-    trainer = Trainer(cfg)
+    comet_logger.log_asset_data(cfg, name="config")
+    trainer = Trainer(cfg, comet_logger)
     trainer.resume_or_load(resume=args.resume)
     if cfg.TEST.AUG.ENABLED:
         trainer.register_hooks(
