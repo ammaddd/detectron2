@@ -7,8 +7,7 @@ DeepLab Training Script.
 This script is a simplified version of the training script in detectron2/tools.
 """
 
-from comet_ml import Experiment
-experiment = Experiment()
+from detectron2.utils.comet_utils import CometLogger
 import os
 import torch
 
@@ -114,6 +113,7 @@ def setup(args):
 
 def main(args):
     cfg = setup(args)
+    comet_logger = CometLogger(args.comet)
 
     if args.eval_only:
         model = Trainer.build_model(cfg)
@@ -123,8 +123,8 @@ def main(args):
         res = Trainer.test(cfg, model)
         return res
 
-    experiment.log_asset_data(cfg, name="config.yaml")
-    trainer = Trainer(cfg, experiment)
+    comet_logger.log_asset_data(cfg, name="config.yaml")
+    trainer = Trainer(cfg, comet_logger)
     trainer.resume_or_load(resume=args.resume)
     return trainer.train()
 

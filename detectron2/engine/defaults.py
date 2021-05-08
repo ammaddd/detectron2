@@ -112,6 +112,7 @@ Run on multiple machines:
         default=None,
         nargs=argparse.REMAINDER,
     )
+    parser.add_argument('--comet', default=False, type=bool, help='enable comet logging')
     return parser
 
 
@@ -295,7 +296,7 @@ class DefaultTrainer(TrainerBase):
         cfg (CfgNode):
     """
 
-    def __init__(self, cfg, experiment):
+    def __init__(self, cfg, comet_logger):
         """
         Args:
             cfg (CfgNode):
@@ -317,7 +318,7 @@ class DefaultTrainer(TrainerBase):
                 model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
             )
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
-            model, data_loader, optimizer, experiment
+            model, data_loader, optimizer, comet_logger
         )
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)
